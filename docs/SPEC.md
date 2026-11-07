@@ -11,10 +11,11 @@ blood. Breathing out: the diaphragm relaxes and domes up, the lungs shrink, and 
 and goes back up and out. Labels follow page 3 of the Flying Colors "Respiratory System" task cards. No numbers.
 
 ## Art
-`art/source/respiratory-system.svg` (583.133 x 555.854). Named parts used: `outline`, `Diaphram`, `right-lung`,
-left lung (interior path, `left-lung-lining`, `left-lung-sheathe`, `bronchioles`), `tranchea-bronchi`,
-`oralk-nsal`, `Face-Bones`, `Lines`, `Boxes`, and the invisible guide `airflow`.
-Rendered with Chromium at 2x into `art/layers/`: base, diaphragm, right_lung, left_lung, airway, labels.
+`art/source/respiratory-system.svg` (583.133 x 555.854). Named groups used: `outline`, `Diaphram`, `RightLung`,
+`LeftLung` (includes `bronchioles`), `tranchea-bronchi`, `oralk-nsal`, `Face-Bones`, `Lines`, `Boxes`, and the
+invisible guide `airflow`. Rendered with Chromium at 2x into `art/layers/`: base, diaphragm, right_lung, left_lung,
+airway, labels. Each layer is rendered with `Layer_1` hidden and only its own groups visible (hiding the whole
+`<svg>` would also hide the filters the diaphragm's muscle stripes need).
 Draw order: base < diaphragm < right lung < left lung < airway < gas dots / quiz puff < labels < BoxTargets.
 
 ## Breathing (Explore)
@@ -22,8 +23,12 @@ States OUT → INHALING (4.5 s at 1x) → IN (pause 0.8 s when playing) → EXHA
 Speed slider 0.5x–2x. Breath amount b eases 0→1→0 (cosine).
 - Lungs scale by 1 + 0.10 b about their hilum (cut-open lung: where the left bronchus enters; whole lung: its
   inner edge). Diaphragm scales (1 + 0.03 b, 1 − 0.13 b) about (327, 600), i.e. it flattens and its top moves
-  down about as far as the lung bottoms. Label lines and boxes never move.
-- `GasCloud`: 36 dots per breath, staggered starts, per-dot sideways offset ±4.5 px plus a sine wobble.
+  down about as far as the lung bottoms. The chest widens (ribs move out): the base layer is drawn in 3 px rows,
+  each widened about x = 327 by up to 5% × b, ramping from 0 at y 300 (neck) to full at y 430 and below
+  (`layer_row_scale`). Label lines and boxes never move.
+- `GasCloud`: 36 dots per breath, all at one speed (±3%), starting within 12% of the breath, so they move as a
+  bunched cloud down the airway; per-dot sideways offset ±4.5 px plus a sine wobble. On the exhale, dots deeper in
+  the lung start first so they all reach the bronchus together.
   Oxygen: in from 30 px outside the nostril (fading in), along the path to a random exit point inside the
   cut-open lung, then to the nearest of a few random bronchiole points while shrinking to 0 (0.7 s).
   Carbon dioxide: exact reverse, growing from 0 at a bronchiole point, then back along the path and out.

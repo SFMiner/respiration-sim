@@ -15,6 +15,8 @@ var map_size: Vector2 = Vector2(680, 720)
 ##   "rect": Rect2   – where it is drawn, map-local,
 ##   "motion": String – "static" or a name the system's layer_transform() understands,
 ##   "above_gas": bool – true = drawn over the moving gas dots (label lines and boxes),
+##   "rows": bool (optional) – drawn in thin horizontal rows, each widened by layer_row_scale()
+##                            (lets one part of a picture widen while another stays put),
 ## }
 var layers: Array[Dictionary] = []
 var start_pos: Vector2 = Vector2.ZERO
@@ -63,6 +65,11 @@ var max_travel_time: float = 5.0
 ## Static layers and systems without breathing return the identity transform.
 func layer_transform(_motion: String, _breath: float) -> Transform2D:
 	return Transform2D.IDENTITY
+
+
+## For "rows" layers: Vector2(centre_x, x_scale) for the row at map height `y`.
+func layer_row_scale(_motion: String, _breath: float, _y: float) -> Vector2:
+	return Vector2(0.0, 1.0)
 
 
 func station_count() -> int:

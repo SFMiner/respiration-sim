@@ -26,6 +26,8 @@ const LUNG_TIME: float = 0.7
 const SIDE_SPREAD: float = 4.5
 const WOBBLE_MIN: float = 1.5
 const WOBBLE_MAX: float = 3.5
+## Fraction of the breath over which the dots start: smaller = a tighter cloud in the airway.
+const SPREAD: float = 0.12
 
 var mode: Mode = Mode.NONE
 
@@ -59,15 +61,17 @@ func start_inhale(duration: float) -> void:
 	mode = Mode.INHALE
 	var lung_from: float = _system.distance_at_index(RespiratorySystem.LUNG_BLEND_TO) + 6.0
 	var lung_to: float = _system.path_length() - 2.0
+	# All dots share one speed and start within a short window, so they stay a bunched cloud
+	# down the airway; they spread out only in the lung, where each one leaves the path.
+	var spread: float = duration * SPREAD
+	var v: float = (lung_to + OUTSIDE) / maxf(duration * 0.85 - spread - LUNG_TIME, 0.6)
 	for i: int in DOT_COUNT:
 		var dot: Dictionary = _new_dot(Kind.OXYGEN)
-		var delay: float = duration * 0.3 * float(i) / float(DOT_COUNT - 1) + _rng.randf_range(0.0, 0.08)
 		var exit_d: float = _rng.randf_range(lung_from, lung_to)
-		var travel: float = maxf(duration * 0.85 - delay - LUNG_TIME, 0.6)
-		dot["delay"] = delay
+		dot["delay"] = spread * float(i) / float(DOT_COUNT - 1) + _rng.randf_range(0.0, 0.05)
 		dot["d"] = -OUTSIDE
 		dot["exit_d"] = exit_d
-		dot["v"] = (exit_d + OUTSIDE) / travel * _rng.randf_range(0.92, 1.08)
+		dot["v"] = v * _rng.randf_range(0.97, 1.03)
 		dot["target"] = _pick_target(_rest_path_pos(dot, exit_d))
 		_dots.append(dot)
 	queue_redraw()
@@ -79,15 +83,17 @@ func start_exhale(duration: float) -> void:
 	mode = Mode.EXHALE
 	var lung_from: float = _system.distance_at_index(RespiratorySystem.LUNG_BLEND_TO) + 6.0
 	var lung_to: float = _system.path_length() - 2.0
+	# Dots deeper in the lung come out of the bronchioles first, so they all reach the
+	# bronchus at about the same time and go up the airway as one bunched cloud.
+	var spread: float = duration * SPREAD
+	var v: float = (lung_to + OUTSIDE) / maxf(duration * 0.9 - spread - LUNG_TIME, 0.6)
 	for i: int in DOT_COUNT:
 		var dot: Dictionary = _new_dot(Kind.CARBON_DIOXIDE)
-		var delay: float = duration * 0.25 * float(i) / float(DOT_COUNT - 1) + _rng.randf_range(0.0, 0.08)
 		var exit_d: float = _rng.randf_range(lung_from, lung_to)
-		var travel: float = maxf(duration * 0.9 - delay - LUNG_TIME, 0.6)
-		dot["delay"] = delay
+		dot["delay"] = spread * _rng.randf() + (lung_to - exit_d) / v
 		dot["d"] = exit_d
 		dot["exit_d"] = exit_d
-		dot["v"] = (exit_d + OUTSIDE) / travel * _rng.randf_range(0.92, 1.08)
+		dot["v"] = v * _rng.randf_range(0.97, 1.03)
 		dot["target"] = _pick_target(_rest_path_pos(dot, exit_d))
 		_dots.append(dot)
 	queue_redraw()

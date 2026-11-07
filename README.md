@@ -2,8 +2,8 @@
 
 A simple, visual Godot 4.5 illustration of the human respiratory system (not a real simulation).
 Air goes in through the nose and mouth, down the pharynx, larynx, trachea and left bronchus into the
-bronchioles of the cut-open left lung, then back out. The lungs expand and the diaphragm flattens and
-moves down as you breathe in; both return as you breathe out.
+bronchioles of the cut-open left lung, then back out. The lungs expand, the chest widens and the
+diaphragm flattens and moves down as you breathe in; all return as you breathe out.
 
 ## Modes
 - **Explore**: Breathe in, Breathe out, or Play to keep breathing (Pause lets the current breath finish).

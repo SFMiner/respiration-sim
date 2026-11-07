@@ -31,6 +31,12 @@ const RIGHT_LUNG_PIVOT: Vector2 = Vector2(305.0, 405.0)
 const DIAPHRAGM_PIVOT: Vector2 = Vector2(327.0, 600.0)
 const DIAPHRAGM_FLATTEN: float = 0.13
 const DIAPHRAGM_WIDEN: float = 0.03
+## The chest widens as the ribs move out: the body outline widens about its centre line,
+## not at all at the neck, fully from the chest down (smooth in between).
+const CHEST_CENTRE_X: float = 327.0
+const CHEST_WIDEN: float = 0.05
+const CHEST_FROM_Y: float = 300.0
+const CHEST_FULL_Y: float = 430.0
 ## Along the airflow path, gas dots start moving with the cut-open lung between these indices.
 const LUNG_BLEND_FROM: int = 76
 const LUNG_BLEND_TO: int = 89
@@ -137,7 +143,7 @@ func _init() -> void:
 
 func _build_layers() -> void:
 	layers = [
-		{"path": "res://art/layers/base.png", "rect": Rect2(131.5, 36, 396.5, 616.5), "motion": "static", "above_gas": false},
+		{"path": "res://art/layers/base.png", "rect": Rect2(131.5, 36, 396.5, 616.5), "motion": "chest", "above_gas": false, "rows": true},
 		{"path": "res://art/layers/diaphragm.png", "rect": Rect2(219, 484.5, 217, 131.5), "motion": "diaphragm", "above_gas": false},
 		{"path": "res://art/layers/right_lung.png", "rect": Rect2(206.5, 310.5, 109.5, 212), "motion": "right_lung", "above_gas": false},
 		{"path": "res://art/layers/left_lung.png", "rect": Rect2(329.5, 306.5, 109, 211), "motion": "left_lung", "above_gas": false},
@@ -155,6 +161,13 @@ func layer_transform(motion: String, breath: float) -> Transform2D:
 		"diaphragm":
 			return _scale_about(DIAPHRAGM_PIVOT, Vector2(1.0 + DIAPHRAGM_WIDEN * breath, 1.0 - DIAPHRAGM_FLATTEN * breath))
 	return Transform2D.IDENTITY
+
+
+func layer_row_scale(motion: String, breath: float, y: float) -> Vector2:
+	if motion != "chest":
+		return Vector2(0.0, 1.0)
+	var amount: float = smoothstep(CHEST_FROM_Y, CHEST_FULL_Y, y)
+	return Vector2(CHEST_CENTRE_X, 1.0 + CHEST_WIDEN * breath * amount)
 
 
 func _scale_about(pivot: Vector2, s: Vector2) -> Transform2D:

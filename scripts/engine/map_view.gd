@@ -8,6 +8,8 @@ extends Node2D
 ## Map-local space == screen. Knows only SimSystem.
 
 const COL_HIGHLIGHT: Color = Color("#e8641b")
+## Height of the rows a "rows" layer is drawn in (map px).
+const ROW_HEIGHT: float = 3.0
 
 var _system: SimSystem
 var _above_gas: bool = false
@@ -41,6 +43,24 @@ func set_breath(value: float) -> void:
 	queue_redraw()
 
 
+## Draws a layer as thin horizontal rows, each widened about its own centre
+## (system.layer_row_scale), so e.g. the chest can widen while the head stays put.
+func _draw_rows(tex: Texture2D, layer: Dictionary) -> void:
+	var rect: Rect2 = layer["rect"]
+	var motion: String = str(layer["motion"])
+	var tex_size: Vector2 = tex.get_size()
+	var px_per_unit: float = tex_size.y / rect.size.y
+	var y: float = 0.0
+	while y < rect.size.y:
+		var h: float = minf(ROW_HEIGHT, rect.size.y - y)
+		var row: Vector2 = _system.layer_row_scale(motion, _breath, rect.position.y + y + h * 0.5)
+		var x0: float = row.x + (rect.position.x - row.x) * row.y
+		var dst: Rect2 = Rect2(x0, rect.position.y + y, rect.size.x * row.y, h)
+		var src: Rect2 = Rect2(0.0, y * px_per_unit, tex_size.x, h * px_per_unit)
+		draw_texture_rect_region(tex, dst, src)
+		y += h
+
+
 ## -1 = none. Otherwise a pulsing ring is drawn around that station.
 func set_highlight(index: int) -> void:
 	if _system == null or _above_gas or index < 0 or index >= _system.station_count():
@@ -67,6 +87,10 @@ func _draw() -> void:
 		if tex == null:
 			continue
 		var layer: Dictionary = _layers[i]
+		if bool(layer.get("rows", false)):
+			draw_set_transform_matrix(Transform2D.IDENTITY)
+			_draw_rows(tex, layer)
+			continue
 		draw_set_transform_matrix(_system.layer_transform(str(layer["motion"]), _breath))
 		draw_texture_rect(tex, layer["rect"], false)
 	draw_set_transform_matrix(Transform2D.IDENTITY)
