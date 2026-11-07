@@ -34,11 +34,11 @@ const PHASE_TITLE: Dictionary = {
 	Breath.IN: "Breathed in",
 	Breath.EXHALING: "Breathing out",
 }
-const TEXT_READY: String = "Press Breathe in or Play. Watch the diaphragm and the lungs move. Green dots are oxygen; purple dots are carbon dioxide."
+const TEXT_READY: String = "Press Step to go one stop at a time, or Play. Watch the diaphragm and the lungs move. Green dots are oxygen; purple dots are carbon dioxide."
 const TEXT_INHALING: String = "The diaphragm contracts and pulls down flat, and the ribs lift up and out. The chest gets bigger, so air is pulled in."
 const TEXT_IN: String = "The lungs are full. In the alveoli at the ends of the bronchioles, oxygen passes into the blood."
 const TEXT_EXHALING: String = "The diaphragm relaxes and domes back up, and the ribs move down and in. The chest gets smaller and pushes air out."
-const TEXT_OUT_AGAIN: String = "Carbon dioxide, a waste gas made by your cells, has left the body. Press Breathe in to take another breath."
+const TEXT_OUT_AGAIN: String = "Carbon dioxide, a waste gas made by your cells, has left the body. Press Step or Play to take another breath."
 
 var system: RespiratorySystem
 var token: SimToken
@@ -60,6 +60,12 @@ var _phase_t: float = 0.0
 var _pause: float = 0.0
 var _breaths_taken: int = 0
 var _playing: bool = false
+## Step mode: the breath runs until the leading air reaches the next stop, then everything
+## (lungs, diaphragm, dots) holds still until the next Step.
+var _stepping: bool = false
+var _hold: bool = false
+## Next stop (station index) the stepping breath stops at; -1 = run to the end of the breath.
+var _step_stop: int = -1
 
 ## Quiz part 1 movement (as in the sister sims).
 var _moving: bool = false
@@ -89,8 +95,7 @@ var _explore_box: VBoxContainer
 var _quiz_box: VBoxContainer
 var _explore_btn: Button
 var _quiz_btn: Button
-var _in_btn: Button
-var _out_btn: Button
+var _step_btn: Button
 var _play_btn: Button
 var _reset_btn: Button
 var _speed_slider: HSlider
@@ -169,7 +174,7 @@ func _ready() -> void:
 
 	_build_side_panel()
 	_set_mode(false)
-	_in_btn.call_deferred("grab_focus")
+	_step_btn.call_deferred("grab_focus")
 
 
 # ---------------------------------------------------------------- input
@@ -399,14 +404,12 @@ func _build_explore() -> void:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	_explore_box.add_child(row)
-	_in_btn = _make_button("Breathe in")
-	_out_btn = _make_button("Breathe out")
+	_step_btn = _make_button("Step >")
 	_play_btn = _make_button("Play")
 	_reset_btn = _make_button("Reset")
-	for b: Button in [_in_btn, _out_btn, _play_btn, _reset_btn]:
+	for b: Button in [_step_btn, _play_btn, _reset_btn]:
 		row.add_child(b)
-	_in_btn.pressed.connect(breathe_in)
-	_out_btn.pressed.connect(breathe_out)
+	_step_btn.pressed.connect(step)
 	_play_btn.pressed.connect(toggle_play)
 	_reset_btn.pressed.connect(reset_sim)
 
@@ -537,7 +540,7 @@ func _set_mode(want_quiz: bool) -> void:
 		_moving = false
 		_busy = 0.0
 		reset_sim()
-		_in_btn.call_deferred("grab_focus")
+		_step_btn.call_deferred("grab_focus")
 
 
 func is_busy() -> bool:
@@ -565,6 +568,9 @@ func _reset_breathing() -> void:
 	_phase_t = 0.0
 	_pause = 0.0
 	_breaths_taken = 0
+	_stepping = false
+	_hold = false
+	_step_stop = -1
 	_gas.clear()
 	_map.set_breath(0.0)
 	_map.set_highlight(-1)
@@ -580,24 +586,32 @@ func reset_sim() -> void:
 	_refresh_buttons()
 
 
-## Breathe in when breathed out, breathe out when breathed in (Right arrow / N).
+## Step (button, Right arrow / N): run the breath to the next stop and hold there.
+## In: Nose & Mouth, Pharynx, Larynx, Trachea, Left Bronchus, then the rest of the inhale
+## (Bronchioles). Out: the same stops in reverse, then the rest of the exhale (out of the nose).
 func step() -> void:
-	if breath_phase == Breath.OUT:
-		breathe_in()
+	if quiz_mode or not _can_step():
+		return
+	_stepping = true
+	if _hold:
+		_hold = false
+		if breath_phase == Breath.INHALING:
+			_step_stop = _step_stop + 1 if _step_stop < RespiratorySystem.LEFT_BRONCHUS else -1
+		else:
+			_step_stop = _step_stop - 1 if _step_stop > RespiratorySystem.NOSE_MOUTH else -1
+	elif breath_phase == Breath.OUT:
+		_step_stop = RespiratorySystem.NOSE_MOUTH
+		_start_inhale()
 	elif breath_phase == Breath.IN:
-		breathe_out()
+		_step_stop = RespiratorySystem.LEFT_BRONCHUS
+		_start_exhale()
+	_refresh_buttons()
 
 
-func breathe_in() -> void:
-	if quiz_mode or _playing or breath_phase != Breath.OUT:
-		return
-	_start_inhale()
-
-
-func breathe_out() -> void:
-	if quiz_mode or _playing or breath_phase != Breath.IN:
-		return
-	_start_exhale()
+func _can_step() -> bool:
+	if _playing:
+		return false
+	return _hold or breath_phase == Breath.OUT or breath_phase == Breath.IN
 
 
 ## Play keeps breathing; Pause lets the current breath finish, then stops.
@@ -607,6 +621,10 @@ func toggle_play() -> void:
 	_playing = not _playing
 	if _playing:
 		_pause = 0.0
+		# Play takes over from Step: carry on from wherever the breath is holding.
+		_stepping = false
+		_hold = false
+		_step_stop = -1
 	_refresh_buttons()
 
 
@@ -633,8 +651,7 @@ func _on_speed_changed(value: float) -> void:
 
 func _refresh_buttons() -> void:
 	_play_btn.text = "Pause" if _playing else "Play"
-	_in_btn.disabled = _playing or breath_phase != Breath.OUT
-	_out_btn.disabled = _playing or breath_phase != Breath.IN
+	_step_btn.disabled = not _can_step()
 
 
 ## Smooth in-and-out easing for the lungs and diaphragm.
@@ -643,6 +660,8 @@ func _ease(t: float) -> float:
 
 
 func _process_breathing(delta: float) -> void:
+	if _hold:
+		return
 	var dt: float = delta * speed_factor
 	match breath_phase:
 		Breath.INHALING:
@@ -651,6 +670,7 @@ func _process_breathing(delta: float) -> void:
 			if _phase_t >= 1.0:
 				breath_phase = Breath.IN
 				breath_amount = 1.0
+				_stepping = false
 				_pause = PAUSE_AFTER_IN
 				_update_info()
 				_refresh_buttons()
@@ -660,6 +680,7 @@ func _process_breathing(delta: float) -> void:
 			if _phase_t >= 1.0:
 				breath_phase = Breath.OUT
 				breath_amount = 0.0
+				_stepping = false
 				_breaths_taken += 1
 				_pause = PAUSE_AFTER_OUT
 				_update_info()
@@ -683,6 +704,21 @@ func _process_breathing(delta: float) -> void:
 		_map.set_highlight(region)
 		_apply_roles()
 		_update_info()
+	_check_step_stop()
+
+
+## Step mode: hold once the leading air reaches the next stop's pointer.
+func _check_step_stop() -> void:
+	if not _stepping or _step_stop < 0:
+		return
+	var stop_d: float = system.distance_at_index(RespiratorySystem.STATION_INDEX[_step_stop])
+	var front: float = _gas.front_distance()
+	var reached: bool = front >= stop_d if breath_phase == Breath.INHALING else front <= stop_d
+	if breath_phase != Breath.INHALING and breath_phase != Breath.EXHALING:
+		return
+	if reached:
+		_hold = true
+		_refresh_buttons()
 
 
 func _show_all_names() -> void:

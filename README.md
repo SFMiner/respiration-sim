@@ -6,7 +6,9 @@ bronchioles of the cut-open left lung, then back out. The lungs expand, the ches
 diaphragm flattens and moves down as you breathe in; all return as you breathe out.
 
 ## Modes
-- **Explore**: Breathe in, Breathe out, or Play to keep breathing (Pause lets the current breath finish).
+- **Explore**: Step one stop at a time (the breath holds still at each stop so the panel can be read), or Play
+  to keep breathing (Pause lets the current breath finish). Step goes Nose & Mouth → Pharynx → Larynx → Trachea →
+  Left Bronchus → Bronchioles on the way in, then back through the same stops and out of the nose.
   - Breathing in: bright green **oxygen** dots come in at the nose, wobble down the airway and scatter
     into the bronchioles, shrinking to nothing as they pass into the blood.
   - Breathing out: bright purple **carbon dioxide** dots grow out of the bronchioles and wobble back up
@@ -23,7 +25,7 @@ diaphragm flattens and moves down as you breathe in; all return as you breathe o
 | Key | Action |
 |-----|--------|
 | Space | Play / Pause (Explore) |
-| Right arrow / N | Next half-breath (Breathe in, then Breathe out) |
+| Right arrow / N | Step to the next stop |
 | R | Reset / restart quiz |
 | M | Switch Explore / Quiz |
 | F11 | Full screen on/off (also the "Full screen" button) |

@@ -20,7 +20,10 @@ Draw order: base < diaphragm < right lung < left lung < airway < gas dots / quiz
 
 ## Breathing (Explore)
 States OUT → INHALING (4.5 s at 1x) → IN (pause 0.8 s when playing) → EXHALING (5.0 s) → OUT (pause 1.2 s).
-Speed slider 0.5x–2x. Breath amount b eases 0→1→0 (cosine).
+Speed slider 0.5x–2x. Breath amount b eases 0→1→0 (cosine). Buttons: Step > / Play / Reset (as in the sister sims).
+- Step: runs the breath until the leading air (`front_distance`) reaches the next stop's pointer (AIRFLOW index
+  20, 40, 49, 63, 81 on the way in; 81, 63, 49, 40, 20 on the way out), then holds everything still. After the
+  last stop, Step runs the rest of the inhale (Bronchioles) or exhale (out of the nose). Play takes over from a hold.
 - Lungs scale by 1 + 0.10 b about their hilum (cut-open lung: where the left bronchus enters; whole lung: its
   inner edge). Diaphragm scales (1 + 0.03 b, 1 − 0.13 b) about (327, 600), i.e. it flattens and its top moves
   down about as far as the lung bottoms. The chest widens (ribs move out): the base layer is drawn in 3 px rows,
