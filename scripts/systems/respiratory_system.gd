@@ -137,6 +137,7 @@ func _init() -> void:
 	_build_cumulative()
 	_build_layers()
 	_build_organs()
+	_build_questions()
 	_build_stations()
 	_build_segments()
 
@@ -247,6 +248,81 @@ func _build_organs() -> void:
 		{
 			"before": BRONCHIOLES, "organs": ["right_lung", "left_lung"],
 			"prompt": "Before the air's last stop, label both lungs! Right and left mean the body's own sides.",
+		},
+	]
+
+
+func _build_questions() -> void:
+	quiz_questions = [
+		{
+			"question": "Where does oxygen pass into the blood?", "answer": "bronchioles",
+			"hint": "Think of the tiny air sacs (alveoli) at the ends of the smallest airways.",
+			"explain": "Oxygen passes through the thin walls of the alveoli at the ends of the bronchioles.",
+		},
+		{
+			"question": "Where does carbon dioxide leave the blood?", "answer": "bronchioles",
+			"hint": "It happens in the same place oxygen goes in.",
+			"explain": "Carbon dioxide leaves the blood in the alveoli at the ends of the bronchioles, then is breathed out.",
+		},
+		{
+			"question": "Which muscle contracts and pulls down to bring air into the lungs?", "answer": "diaphragm",
+			"hint": "Look for the dome-shaped muscle under the lungs.",
+			"explain": "The diaphragm contracts and flattens, making the chest bigger so air rushes in.",
+		},
+		{
+			"question": "What relaxes and domes back up when you breathe out?", "answer": "diaphragm",
+			"hint": "It is the same muscle that pulls down when you breathe in.",
+			"explain": "The diaphragm relaxes and domes up, making the chest smaller and pushing air out.",
+		},
+		{
+			"question": "Where do the vocal cords vibrate to make sound?", "answer": "larynx",
+			"hint": "Look for the voice box in the neck.",
+			"explain": "The larynx is the voice box. Air makes its vocal cords vibrate.",
+		},
+		{
+			"question": "Which part is covered by the epiglottis when you swallow?", "answer": "larynx",
+			"hint": "The flap keeps food out of the airway, so it covers the airway's entrance.",
+			"explain": "The epiglottis covers the larynx so food goes down the esophagus, not the airway.",
+		},
+		{
+			"question": "Which tube carries both air and food?", "answer": "pharynx",
+			"hint": "It is the throat, behind the nose and mouth.",
+			"explain": "The pharynx (throat) is part of both the respiratory and digestive systems.",
+		},
+		{
+			"question": "Which part warms, moistens and cleans air coming in through the nose?", "answer": "nasal",
+			"hint": "Air entering through the nose goes here first.",
+			"explain": "Hairs and mucus in the nasal cavity trap dust and germs, and the air is warmed and moistened.",
+		},
+		{
+			"question": "If your nose is blocked, where else can air come in?", "answer": "oral",
+			"hint": "There is one other opening into the pharynx.",
+			"explain": "Air can come in through the oral cavity, the mouth.",
+		},
+		{
+			"question": "Which airway is called the windpipe and is held open by rings of cartilage?", "answer": "trachea",
+			"hint": "It is the largest airway, in the neck and chest.",
+			"explain": "The trachea, or windpipe, is kept open by rings of cartilage.",
+		},
+		{
+			"question": "Which tube carries air into the right lung?", "answer": "right_bronchus",
+			"hint": "Right means the body's own right, which is the left side of the picture.",
+			"explain": "The trachea splits into two bronchi; the right bronchus goes into the right lung.",
+		},
+		{
+			"question": "Which tube carries air into the left lung?", "answer": "left_bronchus",
+			"hint": "Left means the body's own left, which is the right side of the picture.",
+			"explain": "The left bronchus carries air into the left lung.",
+		},
+		{
+			"question": "Which lung has 3 lobes?", "answer": "right_lung",
+			"hint": "It is the bigger lung.",
+			"explain": "The right lung is the bigger one, with 3 lobes.",
+		},
+		{
+			"question": "Which lung is smaller, to make room for the heart?", "answer": "left_lung",
+			"hint": "The heart sits a little to the body's left.",
+			"explain": "The left lung has only 2 lobes, leaving room for the heart.",
 		},
 	]
 

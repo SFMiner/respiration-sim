@@ -19,7 +19,10 @@ diaphragm flattens and moves down as you breathe in; all return as you breathe o
   Trachea → Left Bronchus → Bronchioles). Other organs must be labelled on their own boxes first:
   the Diaphragm before the first stop, the Right Bronchus before the Left Bronchus, and both lungs
   (any order) before the Bronchioles. A right card at the wrong time is a reminder, not a mistake.
-- **Quiz part 2**: drag each organ's job onto its label box.
+- **Quiz part 2**: drag each organ's job onto its label box (cards shuffled every time).
+- **Quiz part 3**: 14 questions, one at a time, in a new random order every time (for example "Where does
+  oxygen pass into the blood?"). Drag the question onto the organ that answers it, or tap the organ. Some
+  organs answer more than one question, so elimination doesn't help. Wrong answers give a hint.
 
 ## Controls
 | Key | Action |

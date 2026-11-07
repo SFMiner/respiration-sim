@@ -52,6 +52,13 @@ var quiz_distractors: Array[String] = []
 ##   "prompt": String  – shown while the group is still unlabelled,
 ## }
 var quiz_helper_groups: Array[Dictionary] = []
+## Quiz part 3: questions asked one at a time in a random order. Each: {
+##   "question": String – shown on the card the student drags onto the map,
+##   "answer": String   – organ id whose box answers it (organs can answer several questions),
+##   "hint": String     – shown after a wrong organ,
+##   "explain": String  – shown after the right one,
+## }. Empty = no part 3.
+var quiz_questions: Array[Dictionary] = []
 ## Whether quiz part 2 (drag each organ's function onto its box) exists for this system.
 var has_match_quiz: bool = false
 

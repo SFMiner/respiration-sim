@@ -3,7 +3,8 @@
 Simple visual (not a real simulation) Godot 4.5 illustration of breathing. Explore mode is a breathing
 cycle: lungs expand, the chest widens and the diaphragm flattens on the inhale; green oxygen dots follow the airflow path into
 the bronchioles and shrink away; purple carbon dioxide dots do the reverse on the exhale. Quiz part 1
-(order of the airway; other organs labelled on their own boxes first) and part 2 (match organ jobs).
+(order of the airway; other organs labelled on their own boxes first), part 2 (match organ jobs) and part 3
+(random-order questions answered on the map; trial, one of parts 2/3 may be dropped).
 HTML5 export; mouse, touch, keyboard; Full screen button + F11.
 
 ## Standards

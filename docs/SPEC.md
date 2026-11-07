@@ -46,3 +46,6 @@ Bronchioles it scatters into the bronchioles and shrinks away.
 Helper groups (label on own box, any order, before moving INTO the station): Diaphragm before Nose & Mouth;
 Right Bronchus before Left Bronchus; Right Lung + Left Lung before Bronchioles. Part 1 total = 10.
 Part 2: 11 organ jobs onto their boxes (texts short enough for one line in the 49 px boxes).
+Part 3 (trial, alongside part 2): `quiz_questions` (14, in `_build_questions`) asked one at a time in a shuffled
+order. One question card (drag key "card_id"); dropping it on a box or tapping a box answers. Wrong = mistake +
+the question's hint; right = box outlined green + explanation, next question. Organs may answer several questions.

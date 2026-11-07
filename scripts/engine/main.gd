@@ -50,6 +50,8 @@ var quiz_complete: bool = false
 var quiz2_complete: bool = false
 var mistakes: int = 0
 var mistakes2: int = 0
+var mistakes3: int = 0
+var quiz3_complete: bool = false
 var steps_done: int = 0
 var matched_count: int = 0
 
@@ -114,6 +116,10 @@ var _stats_label: Label
 var _card_grid: GridContainer
 var _part2_btn: Button
 var _again_btn: Button
+var _part3_btn: Button
+## Quiz part 3: question indices in this run's random order, and how many are answered.
+var _q_order: Array[int] = []
+var _q_pos: int = 0
 var _cards: Array[StationCard] = []
 
 
@@ -327,6 +333,7 @@ func _make_label(label_text: String, font_size: int, color: Color = COL_TEXT) ->
 ## which leaves room for its 11 long cards.
 const FEEDBACK_LINES_PART1: int = 5
 const FEEDBACK_LINES_PART2: int = 2
+const FEEDBACK_LINES_PART3: int = 3
 
 
 func _set_feedback_lines(lines: int) -> void:
@@ -497,6 +504,10 @@ func _build_quiz() -> void:
 	_part2_btn.pressed.connect(start_part2)
 	_part2_btn.visible = false
 	_quiz_box.add_child(_part2_btn)
+	_part3_btn = _make_button("Go to Part 3")
+	_part3_btn.pressed.connect(start_part3)
+	_part3_btn.visible = false
+	_quiz_box.add_child(_part3_btn)
 	_again_btn = _make_button("Start Over")
 	_again_btn.pressed.connect(restart_quiz)
 	_again_btn.visible = false
@@ -886,6 +897,8 @@ func restart_quiz() -> void:
 	token.visible = true
 	quiz_complete = false
 	quiz2_complete = false
+	quiz3_complete = false
+	mistakes3 = 0
 	mistakes = 0
 	mistakes2 = 0
 	steps_done = 0
@@ -902,6 +915,7 @@ func restart_quiz() -> void:
 		bt.set_state(BoxTarget.State.HIDDEN)
 		bt.set_role(BoxTarget.Role.NONE)
 	_part2_btn.visible = false
+	_part3_btn.visible = false
 	_again_btn.visible = false
 	var items: Array[Dictionary] = []
 	for i: int in range(system.station_count()):
@@ -936,6 +950,7 @@ func start_part2() -> void:
 	token.visible = false
 	_display_station = -1
 	_part2_btn.visible = false
+	_part3_btn.visible = false
 	_again_btn.visible = false
 	_drop_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for id: String in system.organ_order:
@@ -962,8 +977,10 @@ func _set_feedback(text_str: String, color: Color) -> void:
 func _update_stats() -> void:
 	if quiz_part == 1:
 		_stats_label.text = "Progress: %d / %d     Mistakes: %d" % [steps_done, _part1_total(), mistakes]
-	else:
+	elif quiz_part == 2:
 		_stats_label.text = "Progress: %d / %d     Mistakes: %d" % [matched_count, system.organ_order.size(), mistakes2]
+	else:
+		_stats_label.text = "Progress: %d / %d     Mistakes: %d" % [_q_pos, _q_order.size(), mistakes3]
 
 
 func _focus_first_card() -> void:
@@ -996,6 +1013,10 @@ func _on_card_selected(id: String) -> void:
 			return
 		submit_answer(id)
 		return
+	if quiz_part == 3:
+		if not quiz3_complete:
+			_set_feedback("Now tap the organ on the map that answers the question.", COL_BLUE)
+		return
 	if quiz2_complete:
 		return
 	_select_card(id if _selected_card_id != id else "")
@@ -1016,6 +1037,8 @@ func _on_map_dropped(card_id: String) -> void:
 func _on_box_dropped(target_id: String, card_id: String) -> void:
 	if quiz_part == 1:
 		submit_answer(card_id, target_id)
+	elif quiz_part == 3:
+		submit_question(target_id)
 	else:
 		submit_match(target_id, card_id)
 
@@ -1028,6 +1051,9 @@ func _on_box_pressed(target_id: String) -> void:
 			_set_feedback("Tap an organ card first, then tap its box.", COL_MUTED)
 			return
 		submit_answer(_selected_card_id, target_id)
+		return
+	if quiz_part == 3:
+		submit_question(target_id)
 		return
 	if quiz2_complete:
 		return
@@ -1104,10 +1130,15 @@ func submit_match(target_id: String, card_id: String) -> void:
 		if matched_count >= system.organ_order.size():
 			quiz2_complete = true
 			_prompt_label.text = "You matched every organ! Part 2 mistakes: %d" % mistakes2
-			_set_feedback("Great work! Part 1 mistakes: %d. Part 2 mistakes: %d." % [mistakes, mistakes2], COL_GREEN)
 			_card_grid.visible = false
-			_again_btn.visible = true
-			_again_btn.call_deferred("grab_focus")
+			if system.quiz_questions.is_empty():
+				_set_feedback("Great work! Part 1 mistakes: %d. Part 2 mistakes: %d." % [mistakes, mistakes2], COL_GREEN)
+				_again_btn.visible = true
+				_again_btn.call_deferred("grab_focus")
+			else:
+				_set_feedback("Great work! Next: questions in a random order.", COL_GREEN)
+				_part3_btn.visible = true
+				_part3_btn.call_deferred("grab_focus")
 		else:
 			_focus_first_card()
 		return
@@ -1226,6 +1257,76 @@ func _on_quiz_arrived() -> void:
 	_prompt_label.text = _next_prompt()
 	_set_feedback("Correct! %s" % info, COL_GREEN)
 	_focus_first_card()
+
+
+# ---------------------------------------------------------------- quiz part 3
+
+## Part 3: system.quiz_questions one at a time, in a new random order each time. The student drags
+## the question card onto the organ that answers it, or just taps that organ's box. Organs can
+## answer more than one question, so the boxes never run out.
+func start_part3() -> void:
+	if system.quiz_questions.is_empty() or not quiz2_complete:
+		return
+	quiz_part = 3
+	_set_feedback_lines(FEEDBACK_LINES_PART3)
+	quiz3_complete = false
+	mistakes3 = 0
+	_q_order.clear()
+	for i: int in system.quiz_questions.size():
+		_q_order.append(i)
+	_q_order.shuffle()
+	_q_pos = 0
+	_part3_btn.visible = false
+	_again_btn.visible = false
+	for id: String in system.organ_order:
+		var bt: BoxTarget = _boxes[id]
+		bt.locked = false
+		bt.set_state(BoxTarget.State.NAME)
+		bt.set_role(BoxTarget.Role.NONE)
+	_set_boxes_interactive(true)
+	_set_feedback("Drag the question onto the right organ, or tap the organ.", COL_MUTED)
+	_show_question()
+
+
+func _show_question() -> void:
+	var q: Dictionary = system.quiz_questions[_q_order[_q_pos]]
+	_prompt_label.text = "Part 3: Question %d of %d" % [_q_pos + 1, _q_order.size()]
+	var items: Array[Dictionary] = [{"id": "q:%d" % _q_order[_q_pos], "text": str(q["question"])}]
+	_build_cards(items, 1, 20, "card_id")
+	_update_stats()
+	_focus_first_card()
+
+
+func submit_question(target_id: String) -> void:
+	if not quiz_mode or quiz_part != 3 or quiz3_complete or not _boxes.has(target_id):
+		return
+	var q: Dictionary = system.quiz_questions[_q_order[_q_pos]]
+	var card: StationCard = _find_card("q:%d" % _q_order[_q_pos])
+	for id: String in system.organ_order:
+		var rb: BoxTarget = _boxes[id]
+		rb.set_role(BoxTarget.Role.NONE)
+	if target_id != str(q["answer"]):
+		mistakes3 += 1
+		_set_feedback("Not the %s. %s" % [system.organs[target_id]["name"], q["hint"]], COL_RED)
+		_update_stats()
+		if card != null:
+			card.shake()
+		return
+	var bt: BoxTarget = _boxes[target_id]
+	bt.set_role(BoxTarget.Role.CORRECT)
+	_q_pos += 1
+	_set_feedback("Correct! %s" % q["explain"], COL_GREEN)
+	if _q_pos >= _q_order.size():
+		quiz3_complete = true
+		_update_stats()
+		_clear_cards()
+		_card_grid.visible = false
+		_prompt_label.text = "You answered every question! Part 3 mistakes: %d" % mistakes3
+		_set_feedback("Great work! Mistakes: Part 1: %d. Part 2: %d. Part 3: %d." % [mistakes, mistakes2, mistakes3], COL_GREEN)
+		_again_btn.visible = true
+		_again_btn.call_deferred("grab_focus")
+		return
+	_show_question()
 
 
 # ---------------------------------------------------------------- full screen
